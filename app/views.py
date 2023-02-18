@@ -4,10 +4,16 @@ Jinja2 Documentation:    http://jinja.pocoo.org/2/documentation/
 Werkzeug Documentation:  http://werkzeug.pocoo.org/documentation/
 This file creates your application.
 """
-
+import os
 from app import app
 from flask import render_template, request, redirect, url_for, flash
+from werkzeug.utils import secure_filename
+from app import mail
+from flask_mail import Message
 
+# Note: that when using Flask-WTF we need to import the Form Class that we created
+# in forms.py
+from .forms import ContactForm
 
 ###
 # Routing for your application.
@@ -23,6 +29,30 @@ def home():
 def about():
     """Render the website's about page."""
     return render_template('about.html', name="Mary Jane")
+
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    #use contact form
+    contactForm = ContactForm()
+
+    if request.method == 'POST':
+        if contactForm.validate_on_submit():
+            # Note the difference when retrieving form data using Flask-WTF
+            # Here we use contactForm.name.data instead of request.form['name']
+            name = contactForm.name.data
+            email = contactForm.email.data
+            subject = contactForm.subject.data
+            message = contactForm.message.data
+
+            flash('You have successfully filled out the form', 'success')
+            return render_template('result.html', name=name,
+                                                  email=email,
+                                                  subject=subject,
+                                                  message=message)
+        flash_errors(contactForm)
+
+    """Render the contact form."""
+    return render_template('contact.html', form=contactForm)
 
 
 ###
